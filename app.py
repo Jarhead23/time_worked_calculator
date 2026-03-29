@@ -20,7 +20,7 @@ def check_password():
     if not st.session_state["authenticated"]:
         st.markdown("<div style='margin-top: 6rem;'></div>", unsafe_allow_html=True)
         st.text_input(
-            "Enter Password to access the Inventory Audit",
+            "Enter Password to access the Rounding Calculator",
             type="password",
             on_change=password_entered,
             key="password_input",
