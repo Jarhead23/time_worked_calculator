@@ -2,66 +2,66 @@ import streamlit as st
 import datetime
 import math
 
-def calculate_billable_hours(start, end):
-    # Convert times to a datetime object for calculation
-    # Using a dummy date (today) to handle time arithmetic
-    today = datetime.date.today()
-    start_dt = datetime.datetime.combine(today, start)
-    end_dt = datetime.datetime.combine(today, end)
-    
-    # Logic for overnight shifts (e.g., 11:00 PM to 1:00 AM)
-    if end_dt <= start_dt:
-        end_dt += datetime.timedelta(days=1)
+def calculate_hours(start_str, end_str):
+    try:
+        # Define the format we expect (HH:MM in 24-hour or 12-hour format)
+        # We try 24-hour format first for simplicity
+        fmt = '%H:%M'
+        start_time = datetime.datetime.strptime(start_str.strip(), fmt)
+        end_time = datetime.datetime.strptime(end_str.strip(), fmt)
         
-    # Calculate the total difference in minutes
-    duration = end_dt - start_dt
-    total_minutes = duration.total_seconds() / 60
+        # Handle overnight shifts
+        if end_time <= start_time:
+            end_time += datetime.timedelta(days=1)
+            
+        duration = end_time - start_time
+        total_minutes = duration.total_seconds() / 60
+        
+        # ALWAYS ROUND UP LOGIC
+        # 1-15 min = 0.25, 16-30 = 0.50, etc.
+        billable_units = math.ceil(total_minutes / 15)
+        billable_hours = billable_units * 0.25
+        
+        return billable_hours, total_minutes, None
+    except ValueError:
+        return None, None, "Please enter time in HH:MM format (e.g., 02:08 or 14:15)"
+
+# --- Streamlit UI ---
+st.set_page_config(page_title="Manual Time Entry", layout="centered")
+
+st.title("⏱️ Billable Hours (Manual Entry)")
+st.write("Type your start and end times below in **HH:MM** format.")
+
+# Manual Text Inputs
+col1, col2 = st.columns(2)
+with col1:
+    start_input = st.text_input("Start Time (HH:MM)", value="02:00")
+with col2:
+    end_input = st.text_input("End Time (HH:MM)", value="02:08")
+
+if start_input and end_input:
+    billable_total, raw_mins, error = calculate_hours(start_input, end_input)
     
-    # --- CORE ROUNDING LOGIC ---
-    # Divide minutes by 15. If there is ANY remainder (e.g., 16/15 = 1.06), 
-    # math.ceil() pushes it to the next whole number (2).
-    fifteen_min_blocks = math.ceil(total_minutes / 15)
-    billable_hours = fifteen_min_blocks * 0.25
-    
-    return billable_hours, total_minutes
+    if error:
+        st.error(error)
+    else:
+        st.divider()
+        st.header(f"Total Billable: {billable_total:.2f} Hours")
+        
+        # Breakdown
+        st.write(f"**Calculated from:** {start_input} to {end_input}")
+        st.write(f"**Total Minutes:** {int(raw_mins)}")
+        
+        # Logic display to match your chart
+        st.info(f"Logic: {int(raw_mins)} minutes is {math.ceil(raw_mins/15)} 15-minute blocks.")
 
-# --- STREAMLIT UI ---
-st.set_page_config(page_title="Billable Hours Tracker", layout="centered")
-
-st.title("⏱️ Billable Hours Calculator")
-st.write("Enter any start and end time. The system **always rounds up** to the nearest 15 minutes.")
-
-# User Inputs
-with st.container():
-    col1, col2 = st.columns(2)
-    with col1:
-        user_start = st.time_input("Enter Start Time", value=datetime.time(9, 0))
-    with col2:
-        user_end = st.time_input("Enter End Time", value=datetime.time(11, 8))
-
-# Perform Calculation
-billable_total, raw_mins = calculate_billable_hours(user_start, user_end)
-
-# Display Results
-st.divider()
-st.header(f"Total Billable: {billable_total:.2f} Hours")
-
-# Verification Table
-st.subheader("Calculation Details")
-data = {
-    "Actual Minutes Worked": f"{int(raw_mins)} mins",
-    "15-Minute Blocks (Rounded Up)": math.ceil(raw_mins / 15),
-    "Final Decimal Value": f"{billable_total:.2f}"
-}
-st.table(data)
-
-# Quick Reference for Logic
-with st.expander("Show Rounding Chart"):
+# Quick Reference
+with st.expander("Rounding Reference Chart"):
     st.markdown("""
-    | Minutes Over | Billable Increase |
+    | Minutes | Result |
     | :--- | :--- |
-    | 1–15 mins | +0.25 |
-    | 16–30 mins | +0.50 |
-    | 31–45 mins | +0.75 |
-    | 46–60 mins | +1.00 |
+    | 1 – 15 | +0.25 |
+    | 16 – 30 | +0.50 |
+    | 31 – 45 | +0.75 |
+    | 46 – 60 | +1.00 |
     """)
