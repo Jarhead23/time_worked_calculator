@@ -2,6 +2,11 @@ import streamlit as st
 import datetime
 import math
 
+# ── 1. INITIALIZE SESSION STATE ───────────────────────────────────────────────
+# Ensures the key exists the moment the app starts, preventing KeyError
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+
 # ── 2. LOGIN FUNCTION ─────────────────────────────────────────────────────────
 def check_password():
     """Returns True if the user entered the correct password."""
