@@ -2,6 +2,12 @@ import streamlit as st
 import datetime
 import math
 
+# ── Page config ──────────────────────────────────────────────────────────────
+st.set_page_config(
+    page_title="GGC Billable Hours",
+    page_icon="🚛",
+    layout="wide",
+)
 # ── 1. INITIALIZE SESSION STATE ───────────────────────────────────────────────
 # Ensures the key exists the moment the app starts, preventing KeyError
 if "authenticated" not in st.session_state:
