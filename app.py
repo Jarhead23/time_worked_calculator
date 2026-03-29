@@ -2,6 +2,35 @@ import streamlit as st
 import datetime
 import math
 
+# ── 1. INITIALIZE SESSION STATE ───────────────────────────────────────────────
+# Ensures the key exists the moment the app starts, preventing KeyError
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+
+# ── 2. LOGIN FUNCTION ─────────────────────────────────────────────────────────
+def check_password():
+    """Returns True if the user entered the correct password."""
+    def password_entered():
+        if st.session_state["password_input"] == st.secrets["MY_APP_PASSWORD"]:
+            st.session_state["authenticated"] = True
+            del st.session_state["password_input"]  # remove password from state for security
+        else:
+            st.session_state["authenticated"] = False
+
+    if not st.session_state["authenticated"]:
+        st.markdown("<div style='margin-top: 6rem;'></div>", unsafe_allow_html=True)
+        st.text_input(
+            "Enter Password to access the Inventory Audit",
+            type="password",
+            on_change=password_entered,
+            key="password_input",
+        )
+        return False
+    return True
+
+if not check_password():
+    st.stop()
+    
 def calculate_hours(start_str, end_str):
     try:
         # Define the format we expect (HH:MM in 24-hour or 12-hour format)
@@ -29,7 +58,7 @@ def calculate_hours(start_str, end_str):
 # --- Streamlit UI ---
 st.set_page_config(page_title="Manual Time Entry", layout="centered")
 
-st.title("⏱️ Billable Hours (Manual Entry)")
+st.title("⏱️ Billable Hours ")
 st.write("Type your start and end times below in **HH:MM** format.")
 
 # Manual Text Inputs
