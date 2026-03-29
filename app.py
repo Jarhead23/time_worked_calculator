@@ -20,7 +20,7 @@ def check_password():
     if not st.session_state["authenticated"]:
         st.markdown("<div style='margin-top: 6rem;'></div>", unsafe_allow_html=True)
         st.text_input(
-            "Enter Password to access the Inventory Audit",
+            "Enter Password to access the GGC Billable Hours Calculator",
             type="password",
             on_change=password_entered,
             key="password_input",
@@ -58,7 +58,7 @@ def calculate_hours(start_str, end_str):
 # --- Streamlit UI ---
 st.set_page_config(page_title="Manual Time Entry", layout="centered")
 
-st.title("⏱️ Billable Hours ")
+st.title("⏱️ HUNKS Billable Hours ")
 st.write("Type your start and end times below in **HH:MM** format.")
 
 # Manual Text Inputs
