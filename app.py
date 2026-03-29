@@ -42,53 +42,47 @@ def calculate_hours(start_str, end_str):
         fmt = '%H:%M'
         start_time = datetime.datetime.strptime(start_str.strip(), fmt)
         end_time = datetime.datetime.strptime(end_str.strip(), fmt)
-        
         if end_time <= start_time:
             end_time += datetime.timedelta(days=1)
-            
         duration = end_time - start_time
         total_minutes = duration.total_seconds() / 60
-        
-        # logic: 1-15 = .25, 16-30 = .50, etc.
         billable_units = math.ceil(total_minutes / 15)
-        billable_hours = billable_units * 0.25
-        
-        return billable_hours, total_minutes, None
+        return billable_units * 0.25, total_minutes, None
     except ValueError:
-        return None, None, "Use HH:MM format (e.g. 02:08)"
+        return None, None, "Use HH:MM format"
 
-# --- UI Setup ---
-st.set_page_config(page_title="GGC Time Tracker (TT)", layout="centered")
+st.set_page_config(page_title="Stable Calculator", layout="centered")
 
 st.title("⏱️ Billable Hours Calculator")
-st.write("Enter times manually. Use 24-hour format (e.g., 14:30 for 2:30 PM).")
+st.write("Enter times manually (e.g., 01:00 to 09:22).")
 
-# Create a fixed container for inputs so they don't move
-input_container = st.container(border=True)
-with input_container:
+# 1. FIXED INPUT SECTION
+with st.container(border=True):
     col1, col2 = st.columns(2)
-    start_input = col1.text_input("Start Time", value="02:00")
-    end_input = col2.text_input("End Time", value="02:08")
+    start_input = col1.text_input("Start Time", value="01:00")
+    end_input = col2.text_input("End Time", value="09:22")
     submit = st.button("Calculate Billable Time", use_container_width=True)
 
-# Create a reserved space for the result so the page height stays consistent
-result_area = st.container()
+st.divider()
 
-with result_area:
-    if submit:
-        billable_total, raw_mins, error = calculate_hours(start_input, end_input)
-        
-        if error:
-            st.error(error)
-        else:
-            # Using columns inside the result area to keep it neat
-            st.divider()
-            res_col1, res_col2 = st.columns(2)
-            res_col1.metric("Billable Hours", f"{billable_total:.2f}")
-            res_col2.metric("Actual Minutes", f"{int(raw_mins)}m")
-            
-            # This info box confirms the rounding logic
-            st.info(f"Rounding Up: {int(raw_mins)} minutes = {math.ceil(raw_mins/15)} quarter-hour blocks.")
+# 2. RESERVED SPACE (This stops the jumping)
+# We create the columns and placeholders FIRST
+res_col1, res_col2 = st.columns(2)
+billable_placeholder = res_col1.empty()
+minutes_placeholder = res_col2.empty()
+info_placeholder = st.empty()
+
+# 3. FILL THE RESERVED SPACE
+if submit:
+    billable_total, raw_mins, error = calculate_hours(start_input, end_input)
+    if error:
+        st.error(error)
     else:
-        # Placeholder text so the screen doesn't look empty before hitting enter
-        st.info("Enter times above and click calculate.")
+        # Instead of creating new elements, we "write" to the placeholders
+        billable_placeholder.metric("Billable Hours", f"{billable_total:.2f}")
+        minutes_placeholder.metric("Actual Minutes", f"{int(raw_mins)}m")
+        info_placeholder.info(f"Rounding Up: {int(raw_mins)} minutes = {math.ceil(raw_mins/15)} quarter-hour blocks.")
+else:
+    # Optional: Put a dash or 0.00 so the user sees where the numbers will go
+    billable_placeholder.metric("Billable Hours", "0.00")
+    minutes_placeholder.metric("Actual Minutes", "0m")
