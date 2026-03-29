@@ -51,7 +51,7 @@ def calculate_hours(start_str, end_str):
     except ValueError:
         return None, None, "Use HH:MM format"
 
-st.set_page_config(page_title="Stable Calculator", layout="centered")
+st.set_page_config(page_title="GGC Time Tracker (TT)", layout="centered")
 
 st.title("⏱️ Billable Hours Calculator")
 st.write("Enter times manually (e.g., 01:00 to 09:22).")
